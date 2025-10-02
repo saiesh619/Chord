@@ -1,0 +1,1 @@
+-record(fix_fingers, {i :: integer()}).

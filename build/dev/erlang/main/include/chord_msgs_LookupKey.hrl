@@ -1,0 +1,1 @@
+-record(lookup_key, {key :: integer(), req_id :: integer()}).
