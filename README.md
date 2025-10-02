@@ -1,0 +1,2 @@
+# Chord
+Chord P2P System and Simulation  Implementation of the Chord protocol in Gleam using the Actor Model. The system creates a peer-to-peer overlay network where nodes can join, route, and handle key-value lookups. Each peer is modeled as an actor and sends periodic requests, with the simulation reporting the average hop count per lookup.  Features:  Actor-based design (one actor per peer)  Network join and routing as per the Chord paper  Key-to-string object storage and lookup service  CLI input: project3 numNodes numRequests  Output: Average hops across all requests
