@@ -8,31 +8,65 @@ pub type Msg {
   HopCount(Int)
   RequestDone
   Finished(Float)
+  StartUserPhase
+  // NEW
 }
 
 pub type State {
   State(
     total_hops: Int,
+    // hops from user lookups
+    noise_hops: Int,
+    // hops from maintenance
     completed_nodes: Int,
     num_nodes: Int,
     num_reqs: Int,
     main: Subject(Msg),
+    in_user: Bool,
+    // flag: true once user lookups begin
   )
 }
 
 pub fn init(num_nodes: Int, num_reqs: Int, main: Subject(Msg)) -> State {
-  State(0, 0, num_nodes, num_reqs, main)
+  State(0, 0, 0, num_nodes, num_reqs, main, False)
 }
 
 pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
   case msg {
-    HopCount(h) ->
+    HopCount(h) -> {
+      case state.in_user {
+        True ->
+          actor.continue(State(
+            state.total_hops + h,
+            state.noise_hops,
+            state.completed_nodes,
+            state.num_nodes,
+            state.num_reqs,
+            state.main,
+            state.in_user,
+          ))
+        False ->
+          actor.continue(State(
+            state.total_hops,
+            state.noise_hops + h,
+            state.completed_nodes,
+            state.num_nodes,
+            state.num_reqs,
+            state.main,
+            state.in_user,
+          ))
+      }
+    }
+
+    StartUserPhase ->
       actor.continue(State(
-        state.total_hops + h,
+        state.total_hops,
+        state.noise_hops,
         state.completed_nodes,
         state.num_nodes,
         state.num_reqs,
         state.main,
+        True,
       ))
 
     RequestDone -> {
@@ -46,24 +80,24 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
           }
 
           io.println(
-            "All lookups finished. Average hops = " <> float.to_string(avg),
+            "All lookups finished. Average hops = "
+            <> float.to_string(avg)
+            <> " (extra noise hops = "
+            <> int.to_string(state.noise_hops)
+            <> ")",
           )
           actor.send(state.main, Finished(avg))
-          actor.continue(State(
-            state.total_hops,
-            done2,
-            state.num_nodes,
-            state.num_reqs,
-            state.main,
-          ))
+          actor.continue(state)
         }
         False ->
           actor.continue(State(
             state.total_hops,
+            state.noise_hops,
             done2,
             state.num_nodes,
             state.num_reqs,
             state.main,
+            state.in_user,
           ))
       }
     }

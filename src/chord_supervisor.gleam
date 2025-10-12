@@ -29,13 +29,10 @@ pub fn init(
   stats: Subject(chord_stats.Msg),
 ) -> State {
   let m_bits = ceil_log2(num_nodes * 2)
-  // we’ll set self in initialiser below when wiring builder
   State(num_nodes, num_reqs, stats, [], m_bits, process_subject_placeholder())
 }
 
-// We need a placeholder; replaced by actor.new_with_initialiser
 fn process_subject_placeholder() -> Subject(Msg) {
-  // crash if used before replaced
   panic as "supervisor self not initialised"
 }
 
@@ -57,7 +54,6 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
           [n, ..acc]
         })
 
-      // Let ring settle a bit, then start lookups
       process.send_after(state.self, 1200, AllJoined)
 
       actor.continue(State(
@@ -72,15 +68,19 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
 
     AllJoined -> {
       io.println("Supervisor: starting lookups on all nodes")
+
+      // ✅ Flip stats into user phase right before lookups
+      actor.send(state.stats, chord_stats.StartUserPhase)
+
       list.each(state.nodes, fn(n) {
         actor.send(n, BeginLookups(state.num_reqs))
       })
+
       actor.continue(state)
     }
   }
 }
 
-// builder
 pub fn loop(
   num_nodes: Int,
   num_reqs: Int,
@@ -90,7 +90,6 @@ pub fn loop(
     actor.new_with_initialiser(1000, fn(me: Subject(Msg)) {
       let st =
         State(num_nodes, num_reqs, stats, [], ceil_log2(num_nodes * 2), me)
-      // we want started.data to be the Subject(Msg), so return `me`
       actor.initialised(st)
       |> actor.returning(me)
       |> Ok
@@ -99,7 +98,6 @@ pub fn loop(
 
   case actor.start(builder) {
     Ok(started) -> started.data
-    // now this is Subject(Msg)
     Error(_) -> panic as "Could not start supervisor"
   }
 }

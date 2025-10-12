@@ -7,7 +7,7 @@ pub type NodeRef =
 pub type Msg {
   JoinRing(NodeRef)
   FindSuccessor(key: Int, reply_to: NodeRef, hops: Int)
-  FoundSuccessor(key: Int, succ: NodeRef, hops: Int)
+  FoundSuccessor(key: Int, succ_ref: NodeRef, succ_id: Int, hops: Int)
   Stabilize
   GetPredecessor(reply_to: NodeRef)
   ReplyPredecessor(pred: Option(NodeRef), pred_id: Option(Int))
@@ -17,6 +17,12 @@ pub type Msg {
   BeginLookups(num: Int)
   LookupKey(key: Int, req_id: Int)
   Tick
+}
+
+pub type Purpose {
+  User
+  Maint
+  Join
 }
 
 // -------------------
