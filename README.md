@@ -110,6 +110,4 @@ I was not able to implement failure handling. My attempts showed that:
 * To complete this bonus, I would need to extend stabilization with successor lists, retries, and replication.
 
 ---
-=======
 
->>>>>>> 6379685ae0149a6356d625aa2e56eb106197fc2c
