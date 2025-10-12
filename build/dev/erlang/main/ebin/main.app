@@ -7,13 +7,8 @@
                     gleeunit,
                     randomlib]},
     {description, ""},
-    {modules, [chord_math,
-               chord_msgs,
-               chord_node,
-               chord_stats,
+    {modules, [chord_node,
                chord_supervisor,
-               chord_util,
-               main,
-               main@@main]},
+               main]},
     {registered, []}
 ]}.

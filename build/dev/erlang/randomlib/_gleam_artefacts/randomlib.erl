@@ -1,5 +1,5 @@
 -module(randomlib).
--compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch, inline]).
+-compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch]).
 -define(FILEPATH, "src/randomlib.gleam").
 -export([next_bool/1, next_byte/1, next_float/1, byte_iterator/1, float_iterator/1, next_bytes/2, next/2, new/0, with_seed/1, next_int/2, choice/2]).
 -export_type([random/0]).
@@ -346,7 +346,7 @@ next_int(Rnd, Limit) ->
     " distributed selection from the the items in the list\n"
     " If no choices are passed an Error(Nil) is returned\n"
 ).
--spec choice(random(), list(HBP)) -> {ok, gleam@yielder:yielder(HBP)} |
+-spec choice(random(), list(NME)) -> {ok, gleam@yielder:yielder(NME)} |
     {error, nil}.
 choice(Rnd, Choices) ->
     case Choices of

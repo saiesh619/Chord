@@ -165,7 +165,6 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
     Tick -> {
       case state.pending {
         0 -> {
-          io.println("Node " <> int.to_string(state.id) <> " finished lookups")
           actor.send(state.stats, chord_stats.RequestDone)
           actor.continue(state)
         }

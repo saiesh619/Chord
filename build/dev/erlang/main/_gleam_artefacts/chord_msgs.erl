@@ -2,11 +2,15 @@
 -compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch, inline]).
 -define(FILEPATH, "src/chord_msgs.gleam").
 -export([ipow/2, finger_start/3]).
--export_type([msg/0]).
+-export_type([msg/0, purpose/0]).
 
 -type msg() :: {join_ring, gleam@erlang@process:subject(msg())} |
     {find_successor, integer(), gleam@erlang@process:subject(msg()), integer()} |
-    {found_successor, integer(), gleam@erlang@process:subject(msg()), integer()} |
+    {found_successor,
+        integer(),
+        gleam@erlang@process:subject(msg()),
+        integer(),
+        integer()} |
     stabilize |
     {get_predecessor, gleam@erlang@process:subject(msg())} |
     {reply_predecessor,
@@ -19,7 +23,9 @@
     {lookup_key, integer(), integer()} |
     tick.
 
--file("src/chord_msgs.gleam", 26).
+-type purpose() :: user | maint | join.
+
+-file("src/chord_msgs.gleam", 32).
 -spec ipow(integer(), integer()) -> integer().
 ipow(Base, Exp) ->
     case Exp of
@@ -30,7 +36,7 @@ ipow(Base, Exp) ->
             Base * ipow(Base, Exp - 1)
     end.
 
--file("src/chord_msgs.gleam", 33).
+-file("src/chord_msgs.gleam", 39).
 -spec finger_start(integer(), integer(), integer()) -> integer().
 finger_start(N, I, M) ->
     Size_val = ipow(2, M),

@@ -14,7 +14,7 @@
         integer(),
         gleam@erlang@process:subject(msg())}.
 
--file("src/chord_supervisor.gleam", 37).
+-file("src/chord_supervisor.gleam", 35).
 -spec process_subject_placeholder() -> gleam@erlang@process:subject(msg()).
 process_subject_placeholder() ->
     erlang:error(#{gleam_error => panic,
@@ -22,9 +22,9 @@ process_subject_placeholder() ->
             file => <<?FILEPATH/utf8>>,
             module => <<"chord_supervisor"/utf8>>,
             function => <<"process_subject_placeholder"/utf8>>,
-            line => 39}).
+            line => 36}).
 
--file("src/chord_supervisor.gleam", 42).
+-file("src/chord_supervisor.gleam", 39).
 -spec update(state(), msg()) -> gleam@otp@actor:next(state(), msg()).
 update(State, Msg) ->
     case Msg of
@@ -75,6 +75,7 @@ update(State, Msg) ->
             gleam_stdlib:println(
                 <<"Supervisor: starting lookups on all nodes"/utf8>>
             ),
+            gleam@otp@actor:send(erlang:element(4, State), start_user_phase),
             gleam@list:each(
                 erlang:element(5, State),
                 fun(N@1) ->
@@ -87,7 +88,7 @@ update(State, Msg) ->
             gleam@otp@actor:continue(State)
     end.
 
--file("src/chord_supervisor.gleam", 111).
+-file("src/chord_supervisor.gleam", 108).
 -spec ceil_log2_go(integer(), integer(), integer()) -> integer().
 ceil_log2_go(N, X, Bits) ->
     case X < N of
@@ -98,7 +99,7 @@ ceil_log2_go(N, X, Bits) ->
             Bits
     end.
 
--file("src/chord_supervisor.gleam", 107).
+-file("src/chord_supervisor.gleam", 104).
 -spec ceil_log2(integer()) -> integer().
 ceil_log2(N) ->
     ceil_log2_go(N, 1, 0).
@@ -119,7 +120,7 @@ init(Num_nodes, Num_reqs, Stats) ->
         M_bits,
         process_subject_placeholder()}.
 
--file("src/chord_supervisor.gleam", 84).
+-file("src/chord_supervisor.gleam", 83).
 -spec loop(
     integer(),
     integer(),
@@ -154,5 +155,5 @@ loop(Num_nodes, Num_reqs, Stats) ->
                     file => <<?FILEPATH/utf8>>,
                     module => <<"chord_supervisor"/utf8>>,
                     function => <<"loop"/utf8>>,
-                    line => 103})
+                    line => 100})
     end.

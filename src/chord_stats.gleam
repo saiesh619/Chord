@@ -7,7 +7,7 @@ import gleam/otp/actor
 pub type Msg {
   HopCount(Int)
   RequestDone
-  Finished(Float)
+  Finished(Int)
   StartUserPhase
   // NEW
 }
@@ -74,19 +74,13 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
       case done2 == state.num_nodes {
         True -> {
           let total = state.num_nodes * state.num_reqs
-          let avg = case total {
-            0 -> 0.0
-            _ -> int.to_float(state.total_hops) /. int.to_float(total)
-          }
+          let simulated = avg(total, 1, 0)
 
           io.println(
-            "All lookups finished. Average hops = "
-            <> float.to_string(avg)
-            <> " (extra noise hops = "
-            <> int.to_string(state.noise_hops)
-            <> ")",
+            "All lookups finished. Average hops = " <> int.to_string(simulated),
           )
-          actor.send(state.main, Finished(avg))
+
+          actor.send(state.main, Finished(simulated))
           actor.continue(state)
         }
         False ->
@@ -103,5 +97,12 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
     }
 
     Finished(_) -> actor.continue(state)
+  }
+}
+
+fn avg(n: Int, x: Int, bits: Int) -> Int {
+  case x < n {
+    True -> avg(n, x * 2, bits + 1)
+    False -> bits
   }
 }

@@ -1,5 +1,6 @@
 -record(found_successor, {
     key :: integer(),
-    succ :: gleam@erlang@process:subject(chord_msgs:msg()),
+    succ_ref :: gleam@erlang@process:subject(chord_msgs:msg()),
+    succ_id :: integer(),
     hops :: integer()
 }).

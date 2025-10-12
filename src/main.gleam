@@ -8,8 +8,8 @@ import chord_stats
 import chord_supervisor
 
 pub fn main() {
-  let num_nodes = 2
-  let num_reqs = 1
+  let num_nodes = 10
+  let num_reqs = 20
 
   io.println("Starting Chord P2P simulation...")
   io.println(
@@ -43,8 +43,7 @@ pub fn main() {
 
   // wait for result
   case process.receive(self, 30_000) {
-    Ok(chord_stats.Finished(avg)) -> {
-      io.println("Average hops: " <> float.to_string(avg))
+    Ok(chord_stats.Finished(_avg)) -> {
       io.println("Simulation complete.")
     }
     Ok(_) -> io.println("Got unexpected message, ignoring…")

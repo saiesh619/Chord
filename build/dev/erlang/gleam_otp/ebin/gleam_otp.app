@@ -3,11 +3,6 @@
     {applications, [gleam_erlang,
                     gleam_stdlib]},
     {description, "Fault tolerant multi-core programs with OTP, the BEAM actor framework."},
-    {modules, [gleam@otp@actor,
-               gleam@otp@port,
-               gleam@otp@static_supervisor,
-               gleam@otp@supervision,
-               gleam@otp@system,
-               gleam_otp_external]},
+    {modules, []},
     {registered, []}
 ]}.

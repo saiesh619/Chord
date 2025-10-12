@@ -22,7 +22,7 @@
         gleam@dict:dict(integer(), binary()),
         integer()}.
 
--file("src/chord_node.gleam", 37).
+-file("src/chord_node.gleam", 38).
 -spec init(
     integer(),
     integer(),
@@ -30,9 +30,14 @@
     gleam@erlang@process:subject(chord_msgs:msg())
 ) -> state().
 init(Id, M, Stats, Me) ->
-    {state, Id, M, Me, Stats, Me, Id, none, none, [], maps:new(), 0}.
+    Starts = gleam@list:map(
+        gleam@list:range(1, M),
+        fun(I) -> chord_util:finger_start(Id, I, M) end
+    ),
+    Empty_fingers = gleam@list:map(Starts, fun(S) -> {finger, S, Me, Id} end),
+    {state, Id, M, Me, Stats, Me, Id, none, none, Empty_fingers, maps:new(), 0}.
 
--file("src/chord_node.gleam", 249).
+-file("src/chord_node.gleam", 300).
 -spec schedule_maintenance(state()) -> gleam@otp@actor:next(state(), chord_msgs:msg()).
 schedule_maintenance(State) ->
     gleam@erlang@process:send_after(erlang:element(4, State), 300, stabilize),
@@ -48,12 +53,69 @@ schedule_maintenance(State) ->
     ),
     gleam@otp@actor:continue(State).
 
--file("src/chord_node.gleam", 256).
--spec closest_preceding(state(), integer()) -> gleam@erlang@process:subject(chord_msgs:msg()).
-closest_preceding(State, _) ->
-    erlang:element(6, State).
+-file("src/chord_node.gleam", 307).
+-spec finger_index_for_key(state(), integer()) -> gleam@option:option(integer()).
+finger_index_for_key(State, Key) ->
+    Starts = gleam@list:map(
+        gleam@list:range(1, erlang:element(3, State)),
+        fun(I) ->
+            chord_util:finger_start(
+                erlang:element(2, State),
+                I,
+                erlang:element(3, State)
+            )
+        end
+    ),
+    Paired = gleam@list:zip(
+        gleam@list:range(1, erlang:element(3, State)),
+        Starts
+    ),
+    case gleam@list:find(
+        Paired,
+        fun(T) ->
+            {I@1, S} = T,
+            S =:= Key
+        end
+    ) of
+        {ok, {I@2, _}} ->
+            {some, I@2};
 
--file("src/chord_node.gleam", 48).
+        {error, _} ->
+            none
+    end.
+
+-file("src/chord_node.gleam", 325).
+-spec upsert_finger(list(finger()), integer(), finger()) -> list(finger()).
+upsert_finger(Fingers, Idx, F) ->
+    gleam@list:index_map(Fingers, fun(Old, I) -> case (I + 1) =:= Idx of
+                true ->
+                    F;
+
+                false ->
+                    Old
+            end end).
+
+-file("src/chord_node.gleam", 335).
+-spec closest_preceding(state(), integer()) -> gleam@erlang@process:subject(chord_msgs:msg()).
+closest_preceding(State, Key) ->
+    Rev = lists:reverse(erlang:element(10, State)),
+    case gleam@list:find(Rev, fun(Finger) -> case Finger of
+                {finger, _, _, Node_id} ->
+                    chord_util:in_interval_exclusive(
+                        Node_id,
+                        erlang:element(2, State),
+                        Key,
+                        erlang:element(3, State)
+                    )
+            end end) of
+        {ok, {finger, _, Node, _}} ->
+            Node;
+
+        {error, _} ->
+            erlang:element(6, State)
+    end.
+
+-file("src/chord_node.gleam", 52).
 -spec update(state(), chord_msgs:msg()) -> gleam@otp@actor:next(state(), chord_msgs:msg()).
 update(State, Msg) ->
     case Msg of
@@ -90,6 +152,7 @@ update(State, Msg) ->
                         {found_successor,
                             Key,
                             erlang:element(4, State),
+                            erlang:element(2, State),
                             Hops + 1}
                     ),
                     gleam@otp@actor:continue(State);
@@ -103,7 +166,7 @@ update(State, Msg) ->
                     gleam@otp@actor:continue(State)
             end;
 
-        {found_successor, Key@1, Succ_ref, Hops@1} ->
+        {found_successor, Key@1, Succ_ref, Succ_id, Hops@1} ->
             case Key@1 =:= erlang:element(2, State) of
                 true ->
                     gleam@otp@actor:send(
@@ -118,7 +181,7 @@ update(State, Msg) ->
                         erlang:element(4, State),
                         erlang:element(5, State),
                         Succ_ref,
-                        erlang:element(7, State),
+                        Succ_id,
                         erlang:element(8, State),
                         erlang:element(9, State),
                         erlang:element(10, State),
@@ -127,11 +190,34 @@ update(State, Msg) ->
                     gleam@otp@actor:continue(St2);
 
                 false ->
+                    St2@1 = case finger_index_for_key(State, Key@1) of
+                        {some, Idx} ->
+                            New_fingers = upsert_finger(
+                                erlang:element(10, State),
+                                Idx,
+                                {finger, Key@1, Succ_ref, Succ_id}
+                            ),
+                            {state,
+                                erlang:element(2, State),
+                                erlang:element(3, State),
+                                erlang:element(4, State),
+                                erlang:element(5, State),
+                                erlang:element(6, State),
+                                erlang:element(7, State),
+                                erlang:element(8, State),
+                                erlang:element(9, State),
+                                New_fingers,
+                                erlang:element(11, State),
+                                erlang:element(12, State)};
+
+                        none ->
+                            State
+                    end,
                     gleam@otp@actor:send(
                         erlang:element(5, State),
                         {hop_count, Hops@1}
                     ),
-                    gleam@otp@actor:continue(State)
+                    gleam@otp@actor:continue(St2@1)
             end;
 
         {lookup_key, Key@2, _} ->
@@ -165,13 +251,6 @@ update(State, Msg) ->
         tick ->
             case erlang:element(12, State) of
                 0 ->
-                    gleam_stdlib:println(
-                        <<<<"Node "/utf8,
-                                (erlang:integer_to_binary(
-                                    erlang:element(2, State)
-                                ))/binary>>/binary,
-                            " finished lookups"/utf8>>
-                    ),
                     gleam@otp@actor:send(erlang:element(5, State), request_done),
                     gleam@otp@actor:continue(State);
 
@@ -231,7 +310,7 @@ update(State, Msg) ->
                 none ->
                     false
             end,
-            St2@1 = case Should_adopt of
+            St2@2 = case Should_adopt of
                 true ->
                     case Pred_opt of
                         {some, X} ->
@@ -262,10 +341,10 @@ update(State, Msg) ->
                     State
             end,
             gleam@otp@actor:send(
-                erlang:element(6, St2@1),
-                {notify, erlang:element(4, St2@1), erlang:element(2, St2@1)}
+                erlang:element(6, St2@2),
+                {notify, erlang:element(4, St2@2), erlang:element(2, St2@2)}
             ),
-            gleam@otp@actor:continue(St2@1);
+            gleam@otp@actor:continue(St2@2);
 
         {notify, N@1, N_id} ->
             Adopt = case erlang:element(9, State) of
@@ -280,7 +359,7 @@ update(State, Msg) ->
                         erlang:element(3, State)
                     )
             end,
-            St2@2 = case Adopt of
+            St2@3 = case Adopt of
                 true ->
                     {state,
                         erlang:element(2, State),
@@ -298,16 +377,52 @@ update(State, Msg) ->
                 false ->
                     State
             end,
-            gleam@otp@actor:continue(St2@2);
+            gleam@otp@actor:continue(St2@3);
 
-        {fix_fingers, _} ->
+        {fix_fingers, I} ->
+            Start = chord_util:finger_start(
+                erlang:element(2, State),
+                I,
+                erlang:element(3, State)
+            ),
+            gleam@otp@actor:send(
+                erlang:element(4, State),
+                {find_successor, Start, erlang:element(4, State), 0}
+            ),
+            Next_i = case I < erlang:element(3, State) of
+                true ->
+                    I + 1;
+
+                false ->
+                    1
+            end,
+            gleam@erlang@process:send_after(
+                erlang:element(4, State),
+                500,
+                {fix_fingers, Next_i}
+            ),
             gleam@otp@actor:continue(State);
 
         check_predecessor ->
+            case erlang:element(8, State) of
+                {some, P} ->
+                    gleam@otp@actor:send(
+                        P,
+                        {get_predecessor, erlang:element(4, State)}
+                    );
+
+                none ->
+                    nil
+            end,
+            gleam@erlang@process:send_after(
+                erlang:element(4, State),
+                700,
+                check_predecessor
+            ),
             gleam@otp@actor:continue(State)
     end.
 
--file("src/chord_node.gleam", 262).
+-file("src/chord_node.gleam", 352).
 -spec start(
     integer(),
     integer(),
@@ -336,5 +451,5 @@ start(Id, M, Stats) ->
                     file => <<?FILEPATH/utf8>>,
                     module => <<"chord_node"/utf8>>,
                     function => <<"start"/utf8>>,
-                    line => 276})
+                    line => 364})
     end.

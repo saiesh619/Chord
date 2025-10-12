@@ -1,6 +1,6 @@
 -module(bigi).
--compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch, inline]).
--define(FILEPATH, "src/bigi.gleam").
+-compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch]).
+
 -export([zero/0, from_int/1, from_string/1, from_bytes/3, to_int/1, to_string/1, to_bytes/4, compare/2, absolute/1, negate/1, add/2, subtract/2, multiply/2, divide/2, divide_no_zero/2, remainder/2, floor_divide/2, remainder_no_zero/2, modulo/2, modulo_no_zero/2, power/2, decode/1, bitwise_and/2, bitwise_exclusive_or/2, bitwise_not/1, bitwise_or/2, bitwise_shift_left/2, bitwise_shift_right/2, is_odd/1, max/2, min/2, clamp/3, sum/1, product/1, undigits/2, digits/1]).
 -export_type([big_int/0, endianness/0, signedness/0]).
 
@@ -388,43 +388,35 @@ undigits(Digits, Base) ->
 get_digit(Bigint, Digits, Divisor) ->
     case bigi_ffi:compare(Bigint, Divisor) of
         lt ->
-            Digit@1 = case bigi_ffi:to(Bigint) of
-                {ok, Digit} -> Digit;
+            _assert_subject = bigi_ffi:to(Bigint),
+            {ok, Digit} = case _assert_subject of
+                {ok, _} -> _assert_subject;
                 _assert_fail ->
                     erlang:error(#{gleam_error => let_assert,
                                 message => <<"Pattern match failed, no pattern matched the value."/utf8>>,
-                                file => <<?FILEPATH/utf8>>,
+                                value => _assert_fail,
                                 module => <<"bigi"/utf8>>,
                                 function => <<"get_digit"/utf8>>,
-                                line => 315,
-                                value => _assert_fail,
-                                start => 10904,
-                                'end' => 10941,
-                                pattern_start => 10915,
-                                pattern_end => 10924})
+                                line => 315})
             end,
-            [Digit@1 | Digits];
+            [Digit | Digits];
 
         _ ->
-            Digit@3 = case begin
+            _assert_subject@1 = begin
                 _pipe = bigi_ffi:remainder(Bigint, Divisor),
                 bigi_ffi:to(_pipe)
-            end of
-                {ok, Digit@2} -> Digit@2;
+            end,
+            {ok, Digit@1} = case _assert_subject@1 of
+                {ok, _} -> _assert_subject@1;
                 _assert_fail@1 ->
                     erlang:error(#{gleam_error => let_assert,
                                 message => <<"Pattern match failed, no pattern matched the value."/utf8>>,
-                                file => <<?FILEPATH/utf8>>,
+                                value => _assert_fail@1,
                                 module => <<"bigi"/utf8>>,
                                 function => <<"get_digit"/utf8>>,
-                                line => 319,
-                                value => _assert_fail@1,
-                                start => 10989,
-                                'end' => 11066,
-                                pattern_start => 11000,
-                                pattern_end => 11009})
+                                line => 319})
             end,
-            Digits@1 = [Digit@3 | Digits],
+            Digits@1 = [Digit@1 | Digits],
             get_digit(bigi_ffi:divide(Bigint, Divisor), Digits@1, Divisor)
     end.
 

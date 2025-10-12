@@ -1,5 +1,5 @@
 -module(gleam@time@calendar).
--compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch, inline]).
+-compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch]).
 -define(FILEPATH, "src/gleam/time/calendar.gleam").
 -export([local_offset/0, month_to_string/1, month_to_int/1, month_from_int/1, is_leap_year/1, is_valid_date/1, is_valid_time_of_day/1]).
 -export_type([date/0, time_of_day/0, month/0]).

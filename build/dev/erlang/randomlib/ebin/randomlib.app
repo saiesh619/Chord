@@ -4,7 +4,6 @@
                     gleam_stdlib,
                     gleam_yielder]},
     {description, "A random number library for Gleam"},
-    {modules, [randomlib,
-               randomlib_ffi]},
+    {modules, []},
     {registered, []}
 ]}.

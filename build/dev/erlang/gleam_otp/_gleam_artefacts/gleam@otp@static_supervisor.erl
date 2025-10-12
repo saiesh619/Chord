@@ -50,19 +50,19 @@
 
 -type erlang_start_flags() :: any().
 
--type erlang_start_flag(FAN) :: {strategy, strategy()} |
+-type erlang_start_flag(FBB) :: {strategy, strategy()} |
     {intensity, integer()} |
     {period, integer()} |
     {auto_shutdown, auto_shutdown()} |
-    {gleam_phantom, FAN}.
+    {gleam_phantom, FBB}.
 
 -type erlang_child_spec() :: any().
 
--type erlang_child_spec_property(FAO) :: {id, integer()} |
+-type erlang_child_spec_property(FBC) :: {id, integer()} |
     {start,
         {gleam@erlang@atom:atom_(),
             gleam@erlang@atom:atom_(),
-            list(fun(() -> {ok, gleam@otp@actor:started(FAO)} |
+            list(fun(() -> {ok, gleam@otp@actor:started(FBC)} |
                 {error, gleam@otp@actor:start_error()}))}} |
     {restart, gleam@otp@supervision:restart()} |
     {significant, boolean()} |

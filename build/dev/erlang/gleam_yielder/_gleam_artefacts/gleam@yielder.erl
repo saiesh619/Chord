@@ -1,41 +1,33 @@
 -module(gleam@yielder).
--compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch, inline]).
--define(FILEPATH, "src/gleam/yielder.gleam").
+-compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch]).
+
 -export([unfold/2, repeatedly/1, repeat/1, from_list/1, transform/3, fold/3, run/1, to_list/1, step/1, take/2, drop/2, map/2, map2/3, append/2, flatten/1, concat/1, flat_map/2, filter/2, filter_map/2, cycle/1, find/2, find_map/2, index/1, iterate/2, take_while/2, drop_while/2, scan/3, zip/2, chunk/2, sized_chunk/2, intersperse/2, any/2, all/2, group/2, reduce/2, last/1, empty/0, once/1, range/2, single/1, interleave/2, fold_until/3, try_fold/3, first/1, at/2, length/1, each/2, yield/2, prepend/2]).
 -export_type([action/1, yielder/1, step/2, chunk/2, sized_chunk/1]).
 
--if(?OTP_RELEASE >= 27).
--define(MODULEDOC(Str), -moduledoc(Str)).
--define(DOC(Str), -doc(Str)).
--else.
--define(MODULEDOC(Str), -compile([])).
--define(DOC(Str), -compile([])).
--endif.
+-type action(FWM) :: stop | {continue, FWM, fun(() -> action(FWM))}.
 
--type action(FQS) :: stop | {continue, FQS, fun(() -> action(FQS))}.
+-opaque yielder(FWN) :: {yielder, fun(() -> action(FWN))}.
 
--opaque yielder(FQT) :: {yielder, fun(() -> action(FQT))}.
+-type step(FWO, FWP) :: {next, FWO, FWP} | done.
 
--type step(FQU, FQV) :: {next, FQU, FQV} | done.
+-type chunk(FWQ, FWR) :: {another_by,
+        list(FWQ),
+        FWR,
+        FWQ,
+        fun(() -> action(FWQ))} |
+    {last_by, list(FWQ)}.
 
--type chunk(FQW, FQX) :: {another_by,
-        list(FQW),
-        FQX,
-        FQW,
-        fun(() -> action(FQW))} |
-    {last_by, list(FQW)}.
-
--type sized_chunk(FQY) :: {another, list(FQY), fun(() -> action(FQY))} |
-    {last, list(FQY)} |
+-type sized_chunk(FWS) :: {another, list(FWS), fun(() -> action(FWS))} |
+    {last, list(FWS)} |
     no_more.
 
--file("src/gleam/yielder.gleam", 37).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 37).
 -spec stop() -> action(any()).
 stop() ->
     stop.
 
--file("src/gleam/yielder.gleam", 72).
--spec unfold_loop(FRG, fun((FRG) -> step(FRH, FRG))) -> fun(() -> action(FRH)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 72).
+-spec unfold_loop(FXA, fun((FXA) -> step(FXB, FXA))) -> fun(() -> action(FXB)).
 unfold_loop(Initial, F) ->
     fun() -> case F(Initial) of
             {next, X, Acc} ->
@@ -45,81 +37,25 @@ unfold_loop(Initial, F) ->
                 stop
         end end.
 
--file("src/gleam/yielder.gleam", 62).
-?DOC(
-    " Creates an yielder from a given function and accumulator.\n"
-    "\n"
-    " The function is called on the accumulator and returns either `Done`,\n"
-    " indicating the yielder has no more elements, or `Next` which contains a\n"
-    " new element and accumulator. The element is yielded by the yielder and the\n"
-    " new accumulator is used with the function to compute the next element in\n"
-    " the sequence.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " unfold(from: 5, with: fn(n) {\n"
-    "  case n {\n"
-    "    0 -> Done\n"
-    "    n -> Next(element: n, accumulator: n - 1)\n"
-    "  }\n"
-    " })\n"
-    " |> to_list\n"
-    " // -> [5, 4, 3, 2, 1]\n"
-    " ```\n"
-).
--spec unfold(FRB, fun((FRB) -> step(FRC, FRB))) -> yielder(FRC).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 62).
+-spec unfold(FWV, fun((FWV) -> step(FWW, FWV))) -> yielder(FWW).
 unfold(Initial, F) ->
     _pipe = Initial,
     _pipe@1 = unfold_loop(_pipe, F),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 94).
-?DOC(
-    " Creates an yielder that yields values created by calling a given function\n"
-    " repeatedly.\n"
-    "\n"
-    " ```gleam\n"
-    " repeatedly(fn() { 7 })\n"
-    " |> take(3)\n"
-    " |> to_list\n"
-    " // -> [7, 7, 7]\n"
-    " ```\n"
-).
--spec repeatedly(fun(() -> FRL)) -> yielder(FRL).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 94).
+-spec repeatedly(fun(() -> FXF)) -> yielder(FXF).
 repeatedly(F) ->
     unfold(nil, fun(_) -> {next, F(), nil} end).
 
--file("src/gleam/yielder.gleam", 109).
-?DOC(
-    " Creates an yielder that returns the same value infinitely.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " repeat(10)\n"
-    " |> take(4)\n"
-    " |> to_list\n"
-    " // -> [10, 10, 10, 10]\n"
-    " ```\n"
-).
--spec repeat(FRN) -> yielder(FRN).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 109).
+-spec repeat(FXH) -> yielder(FXH).
 repeat(X) ->
     repeatedly(fun() -> X end).
 
--file("src/gleam/yielder.gleam", 123).
-?DOC(
-    " Creates an yielder that yields each element from the given list.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> to_list\n"
-    " // -> [1, 2, 3, 4]\n"
-    " ```\n"
-).
--spec from_list(list(FRP)) -> yielder(FRP).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 123).
+-spec from_list(list(FXJ)) -> yielder(FXJ).
 from_list(List) ->
     Yield = fun(Acc) -> case Acc of
             [] ->
@@ -130,12 +66,12 @@ from_list(List) ->
         end end,
     unfold(List, Yield).
 
--file("src/gleam/yielder.gleam", 134).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 134).
 -spec transform_loop(
-    fun(() -> action(FRS)),
-    FRU,
-    fun((FRU, FRS) -> step(FRV, FRU))
-) -> fun(() -> action(FRV)).
+    fun(() -> action(FXM)),
+    FXO,
+    fun((FXO, FXM) -> step(FXP, FXO))
+) -> fun(() -> action(FXP)).
 transform_loop(Continuation, State, F) ->
     fun() -> case Continuation() of
             stop ->
@@ -151,32 +87,14 @@ transform_loop(Continuation, State, F) ->
                 end
         end end.
 
--file("src/gleam/yielder.gleam", 169).
-?DOC(
-    " Creates an yielder from an existing yielder\n"
-    " and a stateful function that may short-circuit.\n"
-    "\n"
-    " `f` takes arguments `acc` for current state and `el` for current element from underlying yielder,\n"
-    " and returns either `Next` with yielded element and new state value, or `Done` to halt the yielder.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " Approximate implementation of `index` in terms of `transform`:\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([\"a\", \"b\", \"c\"])\n"
-    " |> transform(0, fn(i, el) { Next(#(i, el), i + 1) })\n"
-    " |> to_list\n"
-    " // -> [#(0, \"a\"), #(1, \"b\"), #(2, \"c\")]\n"
-    " ```\n"
-).
--spec transform(yielder(FRZ), FSB, fun((FSB, FRZ) -> step(FSC, FSB))) -> yielder(FSC).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 169).
+-spec transform(yielder(FXT), FXV, fun((FXV, FXT) -> step(FXW, FXV))) -> yielder(FXW).
 transform(Yielder, Initial, F) ->
     _pipe = transform_loop(erlang:element(2, Yielder), Initial, F),
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 204).
--spec fold_loop(fun(() -> action(FSJ)), fun((FSL, FSJ) -> FSL), FSL) -> FSL.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 204).
+-spec fold_loop(fun(() -> action(FYD)), fun((FYF, FYD) -> FYF), FYF) -> FYF.
 fold_loop(Continuation, F, Accumulator) ->
     case Continuation() of
         {continue, Elem, Next} ->
@@ -186,87 +104,26 @@ fold_loop(Continuation, F, Accumulator) ->
             Accumulator
     end.
 
--file("src/gleam/yielder.gleam", 195).
-?DOC(
-    " Reduces an yielder of elements into a single value by calling a given\n"
-    " function on each element in turn.\n"
-    "\n"
-    " If called on an yielder of infinite length then this function will never\n"
-    " return.\n"
-    "\n"
-    " If you do not care about the end value and only wish to evaluate the\n"
-    " yielder for side effects consider using the `run` function instead.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> fold(from: 0, with: fn(acc, element) { element + acc })\n"
-    " // -> 10\n"
-    " ```\n"
-).
--spec fold(yielder(FSG), FSI, fun((FSI, FSG) -> FSI)) -> FSI.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 195).
+-spec fold(yielder(FYA), FYC, fun((FYC, FYA) -> FYC)) -> FYC.
 fold(Yielder, Initial, F) ->
     _pipe = erlang:element(2, Yielder),
     fold_loop(_pipe, F, Initial).
 
--file("src/gleam/yielder.gleam", 220).
-?DOC(
-    " Evaluates all elements emitted by the given yielder. This function is useful for when\n"
-    " you wish to trigger any side effects that would occur when evaluating\n"
-    " the yielder.\n"
-).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 220).
 -spec run(yielder(any())) -> nil.
 run(Yielder) ->
     fold(Yielder, nil, fun(_, _) -> nil end).
 
--file("src/gleam/yielder.gleam", 238).
-?DOC(
-    " Evaluates an yielder and returns all the elements as a list.\n"
-    "\n"
-    " If called on an yielder of infinite length then this function will never\n"
-    " return.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3])\n"
-    " |> map(fn(x) { x * 2 })\n"
-    " |> to_list\n"
-    " // -> [2, 4, 6]\n"
-    " ```\n"
-).
--spec to_list(yielder(FSO)) -> list(FSO).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 238).
+-spec to_list(yielder(FYI)) -> list(FYI).
 to_list(Yielder) ->
     _pipe = Yielder,
     _pipe@1 = fold(_pipe, [], fun(Acc, E) -> [E | Acc] end),
     lists:reverse(_pipe@1).
 
--file("src/gleam/yielder.gleam", 266).
-?DOC(
-    " Eagerly accesses the first value of an yielder, returning a `Next`\n"
-    " that contains the first value and the rest of the yielder.\n"
-    "\n"
-    " If called on an empty yielder, `Done` is returned.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " let assert Next(first, rest) = from_list([1, 2, 3, 4]) |> step\n"
-    "\n"
-    " first\n"
-    " // -> 1\n"
-    "\n"
-    " rest |> to_list\n"
-    " // -> [2, 3, 4]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> step\n"
-    " // -> Done\n"
-    " ```\n"
-).
--spec step(yielder(FSR)) -> step(FSR, yielder(FSR)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 266).
+-spec step(yielder(FYL)) -> step(FYL, yielder(FYL)).
 step(Yielder) ->
     case (erlang:element(2, Yielder))() of
         stop ->
@@ -276,8 +133,8 @@ step(Yielder) ->
             {next, E, {yielder, A}}
     end.
 
--file("src/gleam/yielder.gleam", 299).
--spec take_loop(fun(() -> action(FSZ)), integer()) -> fun(() -> action(FSZ)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 299).
+-spec take_loop(fun(() -> action(FYT)), integer()) -> fun(() -> action(FYT)).
 take_loop(Continuation, Desired) ->
     fun() -> case Desired > 0 of
             false ->
@@ -293,36 +150,15 @@ take_loop(Continuation, Desired) ->
                 end
         end end.
 
--file("src/gleam/yielder.gleam", 293).
-?DOC(
-    " Creates an yielder that only yields the first `desired` elements.\n"
-    "\n"
-    " If the yielder does not have enough elements all of them are yielded.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5])\n"
-    " |> take(up_to: 3)\n"
-    " |> to_list\n"
-    " // -> [1, 2, 3]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2])\n"
-    " |> take(up_to: 3)\n"
-    " |> to_list\n"
-    " // -> [1, 2]\n"
-    " ```\n"
-).
--spec take(yielder(FSW), integer()) -> yielder(FSW).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 293).
+-spec take(yielder(FYQ), integer()) -> yielder(FYQ).
 take(Yielder, Desired) ->
     _pipe = erlang:element(2, Yielder),
     _pipe@1 = take_loop(_pipe, Desired),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 342).
--spec drop_loop(fun(() -> action(FTF)), integer()) -> action(FTF).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 342).
+-spec drop_loop(fun(() -> action(FYZ)), integer()) -> action(FYZ).
 drop_loop(Continuation, Desired) ->
     case Continuation() of
         stop ->
@@ -338,40 +174,14 @@ drop_loop(Continuation, Desired) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 337).
-?DOC(
-    " Evaluates and discards the first N elements in an yielder, returning a new\n"
-    " yielder.\n"
-    "\n"
-    " If the yielder does not have enough elements an empty yielder is\n"
-    " returned.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5])\n"
-    " |> drop(up_to: 3)\n"
-    " |> to_list\n"
-    " // -> [4, 5]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2])\n"
-    " |> drop(up_to: 3)\n"
-    " |> to_list\n"
-    " // -> []\n"
-    " ```\n"
-).
--spec drop(yielder(FTC), integer()) -> yielder(FTC).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 337).
+-spec drop(yielder(FYW), integer()) -> yielder(FYW).
 drop(Yielder, Desired) ->
     _pipe = fun() -> drop_loop(erlang:element(2, Yielder), Desired) end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 376).
--spec map_loop(fun(() -> action(FTM)), fun((FTM) -> FTO)) -> fun(() -> action(FTO)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 376).
+-spec map_loop(fun(() -> action(FZG)), fun((FZG) -> FZI)) -> fun(() -> action(FZI)).
 map_loop(Continuation, F) ->
     fun() -> case Continuation() of
             stop ->
@@ -381,37 +191,19 @@ map_loop(Continuation, F) ->
                 {continue, F(E), map_loop(Continuation@1, F)}
         end end.
 
--file("src/gleam/yielder.gleam", 370).
-?DOC(
-    " Creates an yielder from an existing yielder and a transformation function.\n"
-    "\n"
-    " Each element in the new yielder will be the result of calling the given\n"
-    " function on the elements in the given yielder.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3])\n"
-    " |> map(fn(x) { x * 2 })\n"
-    " |> to_list\n"
-    " // -> [2, 4, 6]\n"
-    " ```\n"
-).
--spec map(yielder(FTI), fun((FTI) -> FTK)) -> yielder(FTK).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 370).
+-spec map(yielder(FZC), fun((FZC) -> FZE)) -> yielder(FZE).
 map(Yielder, F) ->
     _pipe = erlang:element(2, Yielder),
     _pipe@1 = map_loop(_pipe, F),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 417).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 417).
 -spec map2_loop(
-    fun(() -> action(FTW)),
-    fun(() -> action(FTY)),
-    fun((FTW, FTY) -> FUA)
-) -> fun(() -> action(FUA)).
+    fun(() -> action(FZQ)),
+    fun(() -> action(FZS)),
+    fun((FZQ, FZS) -> FZU)
+) -> fun(() -> action(FZU)).
 map2_loop(Continuation1, Continuation2, Fun) ->
     fun() -> case Continuation1() of
             stop ->
@@ -427,32 +219,8 @@ map2_loop(Continuation1, Continuation2, Fun) ->
                 end
         end end.
 
--file("src/gleam/yielder.gleam", 408).
-?DOC(
-    " Combines two yielders into a single one using the given function.\n"
-    "\n"
-    " If an yielder is longer than the other the extra elements are dropped.\n"
-    "\n"
-    " This function does not evaluate the elements of the two yielders, the\n"
-    " computation is performed when the resulting yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " let first = from_list([1, 2, 3])\n"
-    " let second = from_list([4, 5, 6])\n"
-    " map2(first, second, fn(x, y) { x + y }) |> to_list\n"
-    " // -> [5, 7, 9]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " let first = from_list([1, 2])\n"
-    " let second = from_list([\"a\", \"b\", \"c\"])\n"
-    " map2(first, second, fn(i, x) { #(i, x) }) |> to_list\n"
-    " // -> [#(1, \"a\"), #(2, \"b\")]\n"
-    " ```\n"
-).
--spec map2(yielder(FTQ), yielder(FTS), fun((FTQ, FTS) -> FTU)) -> yielder(FTU).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 408).
+-spec map2(yielder(FZK), yielder(FZM), fun((FZK, FZM) -> FZO)) -> yielder(FZO).
 map2(Yielder1, Yielder2, Fun) ->
     _pipe = map2_loop(
         erlang:element(2, Yielder1),
@@ -461,8 +229,8 @@ map2(Yielder1, Yielder2, Fun) ->
     ),
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 454).
--spec append_loop(fun(() -> action(FUG)), fun(() -> action(FUG))) -> action(FUG).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 454).
+-spec append_loop(fun(() -> action(GAA)), fun(() -> action(GAA))) -> action(GAA).
 append_loop(First, Second) ->
     case First() of
         {continue, E, First@1} ->
@@ -472,31 +240,16 @@ append_loop(First, Second) ->
             Second()
     end.
 
--file("src/gleam/yielder.gleam", 449).
-?DOC(
-    " Appends two yielders, producing a new yielder.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielders, the\n"
-    " computation is performed when the resulting yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2])\n"
-    " |> append(from_list([3, 4]))\n"
-    " |> to_list\n"
-    " // -> [1, 2, 3, 4]\n"
-    " ```\n"
-).
--spec append(yielder(FUC), yielder(FUC)) -> yielder(FUC).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 449).
+-spec append(yielder(FZW), yielder(FZW)) -> yielder(FZW).
 append(First, Second) ->
     _pipe = fun() ->
         append_loop(erlang:element(2, First), erlang:element(2, Second))
     end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 481).
--spec flatten_loop(fun(() -> action(yielder(FUO)))) -> action(FUO).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 481).
+-spec flatten_loop(fun(() -> action(yielder(GAI)))) -> action(GAI).
 flatten_loop(Flattened) ->
     case Flattened() of
         stop ->
@@ -509,77 +262,26 @@ flatten_loop(Flattened) ->
             )
     end.
 
--file("src/gleam/yielder.gleam", 476).
-?DOC(
-    " Flattens an yielder of yielders, creating a new yielder.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([[1, 2], [3, 4]])\n"
-    " |> map(from_list)\n"
-    " |> flatten\n"
-    " |> to_list\n"
-    " // -> [1, 2, 3, 4]\n"
-    " ```\n"
-).
--spec flatten(yielder(yielder(FUK))) -> yielder(FUK).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 476).
+-spec flatten(yielder(yielder(GAE))) -> yielder(GAE).
 flatten(Yielder) ->
     _pipe = fun() -> flatten_loop(erlang:element(2, Yielder)) end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 504).
-?DOC(
-    " Joins a list of yielders into a single yielder.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " [[1, 2], [3, 4]]\n"
-    " |> map(from_list)\n"
-    " |> concat\n"
-    " |> to_list\n"
-    " // -> [1, 2, 3, 4]\n"
-    " ```\n"
-).
--spec concat(list(yielder(FUS))) -> yielder(FUS).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 504).
+-spec concat(list(yielder(GAM))) -> yielder(GAM).
 concat(Yielders) ->
     flatten(from_list(Yielders)).
 
--file("src/gleam/yielder.gleam", 526).
-?DOC(
-    " Creates an yielder from an existing yielder and a transformation function.\n"
-    "\n"
-    " Each element in the new yielder will be the result of calling the given\n"
-    " function on the elements in the given yielder and then flattening the\n"
-    " results.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2])\n"
-    " |> flat_map(fn(x) { from_list([x, x + 1]) })\n"
-    " |> to_list\n"
-    " // -> [1, 2, 2, 3]\n"
-    " ```\n"
-).
--spec flat_map(yielder(FUW), fun((FUW) -> yielder(FUY))) -> yielder(FUY).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 526).
+-spec flat_map(yielder(GAQ), fun((GAQ) -> yielder(GAS))) -> yielder(GAS).
 flat_map(Yielder, F) ->
     _pipe = Yielder,
     _pipe@1 = map(_pipe, F),
     flatten(_pipe@1).
 
--file("src/gleam/yielder.gleam", 562).
--spec filter_loop(fun(() -> action(FVE)), fun((FVE) -> boolean())) -> action(FVE).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 562).
+-spec filter_loop(fun(() -> action(GAY)), fun((GAY) -> boolean())) -> action(GAY).
 filter_loop(Continuation, Predicate) ->
     case Continuation() of
         stop ->
@@ -595,37 +297,17 @@ filter_loop(Continuation, Predicate) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 554).
-?DOC(
-    " Creates an yielder from an existing yielder and a predicate function.\n"
-    "\n"
-    " The new yielder will contain elements from the first yielder for which\n"
-    " the given function returns `True`.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " import gleam/int\n"
-    "\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> filter(int.is_even)\n"
-    " |> to_list\n"
-    " // -> [2, 4]\n"
-    " ```\n"
-).
--spec filter(yielder(FVB), fun((FVB) -> boolean())) -> yielder(FVB).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 554).
+-spec filter(yielder(GAV), fun((GAV) -> boolean())) -> yielder(GAV).
 filter(Yielder, Predicate) ->
     _pipe = fun() -> filter_loop(erlang:element(2, Yielder), Predicate) end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 606).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 606).
 -spec filter_map_loop(
-    fun(() -> action(FVO)),
-    fun((FVO) -> {ok, FVQ} | {error, any()})
-) -> action(FVQ).
+    fun(() -> action(GBI)),
+    fun((GBI) -> {ok, GBK} | {error, any()})
+) -> action(GBK).
 filter_map_loop(Continuation, F) ->
     case Continuation() of
         stop ->
@@ -641,56 +323,20 @@ filter_map_loop(Continuation, F) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 598).
-?DOC(
-    " Creates an yielder from an existing yielder and a transforming predicate function.\n"
-    "\n"
-    " The new yielder will contain elements from the first yielder for which\n"
-    " the given function returns `Ok`, transformed to the value inside the `Ok`.\n"
-    "\n"
-    " This function does not evaluate the elements of the yielder, the\n"
-    " computation is performed when the yielder is later run.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " import gleam/string\n"
-    " import gleam/int\n"
-    "\n"
-    " \"a1b2c3d4e5f\"\n"
-    " |> string.to_graphemes\n"
-    " |> from_list\n"
-    " |> filter_map(int.parse)\n"
-    " |> to_list\n"
-    " // -> [1, 2, 3, 4, 5]\n"
-    " ```\n"
-).
--spec filter_map(yielder(FVH), fun((FVH) -> {ok, FVJ} | {error, any()})) -> yielder(FVJ).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 598).
+-spec filter_map(yielder(GBB), fun((GBB) -> {ok, GBD} | {error, any()})) -> yielder(GBD).
 filter_map(Yielder, F) ->
     _pipe = fun() -> filter_map_loop(erlang:element(2, Yielder), F) end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 632).
-?DOC(
-    " Creates an yielder that repeats a given yielder infinitely.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2])\n"
-    " |> cycle\n"
-    " |> take(6)\n"
-    " |> to_list\n"
-    " // -> [1, 2, 1, 2, 1, 2]\n"
-    " ```\n"
-).
--spec cycle(yielder(FVV)) -> yielder(FVV).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 632).
+-spec cycle(yielder(GBP)) -> yielder(GBP).
 cycle(Yielder) ->
     _pipe = repeat(Yielder),
     flatten(_pipe).
 
--file("src/gleam/yielder.gleam", 709).
--spec find_loop(fun(() -> action(FWD)), fun((FWD) -> boolean())) -> {ok, FWD} |
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 709).
+-spec find_loop(fun(() -> action(GBX)), fun((GBX) -> boolean())) -> {ok, GBX} |
     {error, nil}.
 find_loop(Continuation, F) ->
     case Continuation() of
@@ -707,41 +353,17 @@ find_loop(Continuation, F) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 701).
-?DOC(
-    " Finds the first element in a given yielder for which the given function returns\n"
-    " `True`.\n"
-    "\n"
-    " Returns `Error(Nil)` if the function does not return `True` for any of the\n"
-    " elements.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " find(from_list([1, 2, 3]), fn(x) { x > 2 })\n"
-    " // -> Ok(3)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " find(from_list([1, 2, 3]), fn(x) { x > 4 })\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " find(empty(), fn(_) { True })\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-).
--spec find(yielder(FVZ), fun((FVZ) -> boolean())) -> {ok, FVZ} | {error, nil}.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 701).
+-spec find(yielder(GBT), fun((GBT) -> boolean())) -> {ok, GBT} | {error, nil}.
 find(Haystack, Is_desired) ->
     _pipe = erlang:element(2, Haystack),
     find_loop(_pipe, Is_desired).
 
--file("src/gleam/yielder.gleam", 754).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 754).
 -spec find_map_loop(
-    fun(() -> action(FWP)),
-    fun((FWP) -> {ok, FWR} | {error, any()})
-) -> {ok, FWR} | {error, nil}.
+    fun(() -> action(GCJ)),
+    fun((GCJ) -> {ok, GCL} | {error, any()})
+) -> {ok, GCL} | {error, nil}.
 find_map_loop(Continuation, F) ->
     case Continuation() of
         stop ->
@@ -757,40 +379,16 @@ find_map_loop(Continuation, F) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 746).
-?DOC(
-    " Finds the first element in a given yielder\n"
-    " for which the given function returns `Ok(new_value)`,\n"
-    " then returns the wrapped `new_value`.\n"
-    "\n"
-    " Returns `Error(Nil)` if no such element is found.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " find_map(from_list([\"a\", \"1\", \"2\"]), int.parse)\n"
-    " // -> Ok(1)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " find_map(from_list([\"a\", \"b\", \"c\"]), int.parse)\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " find_map(from_list([]), int.parse)\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-).
--spec find_map(yielder(FWH), fun((FWH) -> {ok, FWJ} | {error, any()})) -> {ok,
-        FWJ} |
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 746).
+-spec find_map(yielder(GCB), fun((GCB) -> {ok, GCD} | {error, any()})) -> {ok,
+        GCD} |
     {error, nil}.
 find_map(Haystack, Is_desired) ->
     _pipe = erlang:element(2, Haystack),
     find_map_loop(_pipe, Is_desired).
 
--file("src/gleam/yielder.gleam", 783).
--spec index_loop(fun(() -> action(FXA)), integer()) -> fun(() -> action({FXA,
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 783).
+-spec index_loop(fun(() -> action(GCU)), integer()) -> fun(() -> action({GCU,
     integer()})).
 index_loop(Continuation, Next) ->
     fun() -> case Continuation() of
@@ -801,40 +399,20 @@ index_loop(Continuation, Next) ->
                 {continue, {E, Next}, index_loop(Continuation@1, Next + 1)}
         end end.
 
--file("src/gleam/yielder.gleam", 777).
-?DOC(
-    " Wraps values yielded from an yielder with indices, starting from 0.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([\"a\", \"b\", \"c\"]) |> index |> to_list\n"
-    " // -> [#(\"a\", 0), #(\"b\", 1), #(\"c\", 2)]\n"
-    " ```\n"
-).
--spec index(yielder(FWX)) -> yielder({FWX, integer()}).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 777).
+-spec index(yielder(GCR)) -> yielder({GCR, integer()}).
 index(Yielder) ->
     _pipe = erlang:element(2, Yielder),
     _pipe@1 = index_loop(_pipe, 0),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 805).
-?DOC(
-    " Creates an yielder that infinitely applies a function to a value.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " iterate(1, fn(n) { n * 3 }) |> take(5) |> to_list\n"
-    " // -> [1, 3, 9, 27, 81]\n"
-    " ```\n"
-).
--spec iterate(FXD, fun((FXD) -> FXD)) -> yielder(FXD).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 805).
+-spec iterate(GCX, fun((GCX) -> GCX)) -> yielder(GCX).
 iterate(Initial, F) ->
     unfold(Initial, fun(Element) -> {next, Element, F(Element)} end).
 
--file("src/gleam/yielder.gleam", 832).
--spec take_while_loop(fun(() -> action(FXI)), fun((FXI) -> boolean())) -> fun(() -> action(FXI)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 832).
+-spec take_while_loop(fun(() -> action(GDC)), fun((GDC) -> boolean())) -> fun(() -> action(GDC)).
 take_while_loop(Continuation, Predicate) ->
     fun() -> case Continuation() of
             stop ->
@@ -850,27 +428,15 @@ take_while_loop(Continuation, Predicate) ->
                 end
         end end.
 
--file("src/gleam/yielder.gleam", 823).
-?DOC(
-    " Creates an yielder that yields elements while the predicate returns `True`.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 2, 4])\n"
-    " |> take_while(satisfying: fn(x) { x < 3 })\n"
-    " |> to_list\n"
-    " // -> [1, 2]\n"
-    " ```\n"
-).
--spec take_while(yielder(FXF), fun((FXF) -> boolean())) -> yielder(FXF).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 823).
+-spec take_while(yielder(GCZ), fun((GCZ) -> boolean())) -> yielder(GCZ).
 take_while(Yielder, Predicate) ->
     _pipe = erlang:element(2, Yielder),
     _pipe@1 = take_while_loop(_pipe, Predicate),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 868).
--spec drop_while_loop(fun(() -> action(FXO)), fun((FXO) -> boolean())) -> action(FXO).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 868).
+-spec drop_while_loop(fun(() -> action(GDI)), fun((GDI) -> boolean())) -> action(GDI).
 drop_while_loop(Continuation, Predicate) ->
     case Continuation() of
         stop ->
@@ -886,27 +452,14 @@ drop_while_loop(Continuation, Predicate) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 860).
-?DOC(
-    " Creates an yielder that drops elements while the predicate returns `True`,\n"
-    " and then yields the remaining elements.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 2, 5])\n"
-    " |> drop_while(satisfying: fn(x) { x < 4 })\n"
-    " |> to_list\n"
-    " // -> [4, 2, 5]\n"
-    " ```\n"
-).
--spec drop_while(yielder(FXL), fun((FXL) -> boolean())) -> yielder(FXL).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 860).
+-spec drop_while(yielder(GDF), fun((GDF) -> boolean())) -> yielder(GDF).
 drop_while(Yielder, Predicate) ->
     _pipe = fun() -> drop_while_loop(erlang:element(2, Yielder), Predicate) end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 906).
--spec scan_loop(fun(() -> action(FXV)), fun((FXX, FXV) -> FXX), FXX) -> fun(() -> action(FXX)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 906).
+-spec scan_loop(fun(() -> action(GDP)), fun((GDR, GDP) -> GDR), GDR) -> fun(() -> action(GDR)).
 scan_loop(Continuation, F, Accumulator) ->
     fun() -> case Continuation() of
             stop ->
@@ -917,31 +470,16 @@ scan_loop(Continuation, F, Accumulator) ->
                 {continue, Accumulated, scan_loop(Next, F, Accumulated)}
         end end.
 
--file("src/gleam/yielder.gleam", 896).
-?DOC(
-    " Creates an yielder from an existing yielder and a stateful function.\n"
-    "\n"
-    " Specifically, this behaves like `fold`, but yields intermediate results.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " // Generate a sequence of partial sums\n"
-    " from_list([1, 2, 3, 4, 5])\n"
-    " |> scan(from: 0, with: fn(acc, el) { acc + el })\n"
-    " |> to_list\n"
-    " // -> [1, 3, 6, 10, 15]\n"
-    " ```\n"
-).
--spec scan(yielder(FXR), FXT, fun((FXT, FXR) -> FXT)) -> yielder(FXT).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 896).
+-spec scan(yielder(GDL), GDN, fun((GDN, GDL) -> GDN)) -> yielder(GDN).
 scan(Yielder, Initial, F) ->
     _pipe = erlang:element(2, Yielder),
     _pipe@1 = scan_loop(_pipe, F, Initial),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 939).
--spec zip_loop(fun(() -> action(FYE)), fun(() -> action(FYG))) -> fun(() -> action({FYE,
-    FYG})).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 939).
+-spec zip_loop(fun(() -> action(GDY)), fun(() -> action(GEA))) -> fun(() -> action({GDY,
+    GEA})).
 zip_loop(Left, Right) ->
     fun() -> case Left() of
             stop ->
@@ -959,27 +497,14 @@ zip_loop(Left, Right) ->
                 end
         end end.
 
--file("src/gleam/yielder.gleam", 934).
-?DOC(
-    " Zips two yielders together, emitting values from both\n"
-    " until the shorter one runs out.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([\"a\", \"b\", \"c\"])\n"
-    " |> zip(range(20, 30))\n"
-    " |> to_list\n"
-    " // -> [#(\"a\", 20), #(\"b\", 21), #(\"c\", 22)]\n"
-    " ```\n"
-).
--spec zip(yielder(FXZ), yielder(FYB)) -> yielder({FXZ, FYB}).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 934).
+-spec zip(yielder(GDT), yielder(GDV)) -> yielder({GDT, GDV}).
 zip(Left, Right) ->
     _pipe = zip_loop(erlang:element(2, Left), erlang:element(2, Right)),
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 1000).
--spec next_chunk(fun(() -> action(FYT)), fun((FYT) -> FYV), FYV, list(FYT)) -> chunk(FYT, FYV).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1000).
+-spec next_chunk(fun(() -> action(GEN)), fun((GEN) -> GEP), GEP, list(GEN)) -> chunk(GEN, GEP).
 next_chunk(Continuation, F, Previous_key, Current_chunk) ->
     case Continuation() of
         stop ->
@@ -996,8 +521,8 @@ next_chunk(Continuation, F, Previous_key, Current_chunk) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 987).
--spec chunk_loop(fun(() -> action(FYO)), fun((FYO) -> FYQ), FYQ, FYO) -> action(list(FYO)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 987).
+-spec chunk_loop(fun(() -> action(GEI)), fun((GEI) -> GEK), GEK, GEI) -> action(list(GEI)).
 chunk_loop(Continuation, F, Previous_key, Previous_element) ->
     case next_chunk(Continuation, F, Previous_key, [Previous_element]) of
         {last_by, Chunk} ->
@@ -1007,21 +532,8 @@ chunk_loop(Continuation, F, Previous_key, Previous_element) ->
             {continue, Chunk@1, fun() -> chunk_loop(Next, F, Key, El) end}
     end.
 
--file("src/gleam/yielder.gleam", 974).
-?DOC(
-    " Creates an yielder that emits chunks of elements\n"
-    " for which `f` returns the same value.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 2, 3, 4, 4, 6, 7, 7])\n"
-    " |> chunk(by: fn(n) { n % 2 })\n"
-    " |> to_list\n"
-    " // -> [[1], [2, 2], [3], [4, 4, 6], [7, 7]]\n"
-    " ```\n"
-).
--spec chunk(yielder(FYJ), fun((FYJ) -> any())) -> yielder(list(FYJ)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 974).
+-spec chunk(yielder(GED), fun((GED) -> any())) -> yielder(list(GED)).
 chunk(Yielder, F) ->
     _pipe = fun() -> case (erlang:element(2, Yielder))() of
             stop ->
@@ -1032,8 +544,8 @@ chunk(Yielder, F) ->
         end end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 1071).
--spec next_sized_chunk(fun(() -> action(FZH)), integer(), list(FZH)) -> sized_chunk(FZH).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1071).
+-spec next_sized_chunk(fun(() -> action(GFB)), integer(), list(GFB)) -> sized_chunk(GFB).
 next_sized_chunk(Continuation, Left, Current_chunk) ->
     case Continuation() of
         stop ->
@@ -1056,8 +568,8 @@ next_sized_chunk(Continuation, Left, Current_chunk) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 1050).
--spec sized_chunk_loop(fun(() -> action(FZD)), integer()) -> fun(() -> action(list(FZD))).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1050).
+-spec sized_chunk_loop(fun(() -> action(GEX)), integer()) -> fun(() -> action(list(GEX))).
 sized_chunk_loop(Continuation, Count) ->
     fun() -> case next_sized_chunk(Continuation, Count, []) of
             no_more ->
@@ -1070,39 +582,15 @@ sized_chunk_loop(Continuation, Count) ->
                 {continue, Chunk@1, sized_chunk_loop(Next_element, Count)}
         end end.
 
--file("src/gleam/yielder.gleam", 1041).
-?DOC(
-    " Creates an yielder that emits chunks of given size.\n"
-    "\n"
-    " If the last chunk does not have `count` elements, it is yielded\n"
-    " as a partial chunk, with less than `count` elements.\n"
-    "\n"
-    " For any `count` less than 1 this function behaves as if it was set to 1.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5, 6])\n"
-    " |> sized_chunk(into: 2)\n"
-    " |> to_list\n"
-    " // -> [[1, 2], [3, 4], [5, 6]]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5, 6, 7, 8])\n"
-    " |> sized_chunk(into: 3)\n"
-    " |> to_list\n"
-    " // -> [[1, 2, 3], [4, 5, 6], [7, 8]]\n"
-    " ```\n"
-).
--spec sized_chunk(yielder(FYZ), integer()) -> yielder(list(FYZ)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1041).
+-spec sized_chunk(yielder(GET), integer()) -> yielder(list(GET)).
 sized_chunk(Yielder, Count) ->
     _pipe = erlang:element(2, Yielder),
     _pipe@1 = sized_chunk_loop(_pipe, Count),
     {yielder, _pipe@1}.
 
--file("src/gleam/yielder.gleam", 1131).
--spec intersperse_loop(fun(() -> action(FZO)), FZO) -> action(FZO).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1131).
+-spec intersperse_loop(fun(() -> action(GFI)), GFI) -> action(GFI).
 intersperse_loop(Continuation, Separator) ->
     case Continuation() of
         stop ->
@@ -1113,35 +601,8 @@ intersperse_loop(Continuation, Separator) ->
             {continue, Separator, fun() -> {continue, E, Next_interspersed} end}
     end.
 
--file("src/gleam/yielder.gleam", 1118).
-?DOC(
-    " Creates an yielder that yields the given `elem` element\n"
-    " between elements emitted by the underlying yielder.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty()\n"
-    " |> intersperse(with: 0)\n"
-    " |> to_list\n"
-    " // -> []\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1])\n"
-    " |> intersperse(with: 0)\n"
-    " |> to_list\n"
-    " // -> [1]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5])\n"
-    " |> intersperse(with: 0)\n"
-    " |> to_list\n"
-    " // -> [1, 0, 2, 0, 3, 0, 4, 0, 5]\n"
-    " ```\n"
-).
--spec intersperse(yielder(FZL), FZL) -> yielder(FZL).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1118).
+-spec intersperse(yielder(GFF), GFF) -> yielder(GFF).
 intersperse(Yielder, Elem) ->
     _pipe = fun() -> case (erlang:element(2, Yielder))() of
             stop ->
@@ -1152,8 +613,8 @@ intersperse(Yielder, Elem) ->
         end end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 1179).
--spec any_loop(fun(() -> action(FZT)), fun((FZT) -> boolean())) -> boolean().
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1179).
+-spec any_loop(fun(() -> action(GFN)), fun((GFN) -> boolean())) -> boolean().
 any_loop(Continuation, Predicate) ->
     case Continuation() of
         stop ->
@@ -1169,42 +630,14 @@ any_loop(Continuation, Predicate) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 1171).
-?DOC(
-    " Returns `True` if any element emitted by the yielder satisfies the given predicate,\n"
-    " `False` otherwise.\n"
-    "\n"
-    " This function short-circuits once it finds a satisfying element.\n"
-    "\n"
-    " An empty yielder results in `False`.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty()\n"
-    " |> any(fn(n) { n % 2 == 0 })\n"
-    " // -> False\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 5, 7, 9])\n"
-    " |> any(fn(n) { n % 2 == 0 })\n"
-    " // -> True\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 3, 5, 7, 9])\n"
-    " |> any(fn(n) { n % 2 == 0 })\n"
-    " // -> False\n"
-    " ```\n"
-).
--spec any(yielder(FZR), fun((FZR) -> boolean())) -> boolean().
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1171).
+-spec any(yielder(GFL), fun((GFL) -> boolean())) -> boolean().
 any(Yielder, Predicate) ->
     _pipe = erlang:element(2, Yielder),
     any_loop(_pipe, Predicate).
 
--file("src/gleam/yielder.gleam", 1228).
--spec all_loop(fun(() -> action(FZX)), fun((FZX) -> boolean())) -> boolean().
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1228).
+-spec all_loop(fun(() -> action(GFR)), fun((GFR) -> boolean())) -> boolean().
 all_loop(Continuation, Predicate) ->
     case Continuation() of
         stop ->
@@ -1220,42 +653,14 @@ all_loop(Continuation, Predicate) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 1220).
-?DOC(
-    " Returns `True` if all elements emitted by the yielder satisfy the given predicate,\n"
-    " `False` otherwise.\n"
-    "\n"
-    " This function short-circuits once it finds a non-satisfying element.\n"
-    "\n"
-    " An empty yielder results in `True`.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty()\n"
-    " |> all(fn(n) { n % 2 == 0 })\n"
-    " // -> True\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([2, 4, 6, 8])\n"
-    " |> all(fn(n) { n % 2 == 0 })\n"
-    " // -> True\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([2, 4, 5, 8])\n"
-    " |> all(fn(n) { n % 2 == 0 })\n"
-    " // -> False\n"
-    " ```\n"
-).
--spec all(yielder(FZV), fun((FZV) -> boolean())) -> boolean().
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1220).
+-spec all(yielder(GFP), fun((GFP) -> boolean())) -> boolean().
 all(Yielder, Predicate) ->
     _pipe = erlang:element(2, Yielder),
     all_loop(_pipe, Predicate).
 
--file("src/gleam/yielder.gleam", 1273).
--spec update_group_with(GAN) -> fun((gleam@option:option(list(GAN))) -> list(GAN)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1273).
+-spec update_group_with(GGH) -> fun((gleam@option:option(list(GGH))) -> list(GGH)).
 update_group_with(El) ->
     fun(Maybe_group) -> case Maybe_group of
             {some, Group} ->
@@ -1265,57 +670,21 @@ update_group_with(El) ->
                 [El]
         end end.
 
--file("src/gleam/yielder.gleam", 1264).
--spec group_updater(fun((GAF) -> GAG)) -> fun((gleam@dict:dict(GAG, list(GAF)), GAF) -> gleam@dict:dict(GAG, list(GAF))).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1264).
+-spec group_updater(fun((GFZ) -> GGA)) -> fun((gleam@dict:dict(GGA, list(GFZ)), GFZ) -> gleam@dict:dict(GGA, list(GFZ))).
 group_updater(F) ->
     fun(Groups, Elem) -> _pipe = Groups,
         gleam@dict:upsert(_pipe, F(Elem), update_group_with(Elem)) end.
 
--file("src/gleam/yielder.gleam", 1255).
-?DOC(
-    " Returns a `Dict(k, List(element))` of elements from the given yielder\n"
-    " grouped with the given key function.\n"
-    "\n"
-    " The order within each group is preserved from the yielder.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5, 6])\n"
-    " |> group(by: fn(n) { n % 3 })\n"
-    " // -> dict.from_list([#(0, [3, 6]), #(1, [1, 4]), #(2, [2, 5])])\n"
-    " ```\n"
-).
--spec group(yielder(FZZ), fun((FZZ) -> GAB)) -> gleam@dict:dict(GAB, list(FZZ)).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1255).
+-spec group(yielder(GFT), fun((GFT) -> GFV)) -> gleam@dict:dict(GFV, list(GFT)).
 group(Yielder, Key) ->
     _pipe = Yielder,
-    _pipe@1 = fold(_pipe, maps:new(), group_updater(Key)),
+    _pipe@1 = fold(_pipe, gleam@dict:new(), group_updater(Key)),
     gleam@dict:map_values(_pipe@1, fun(_, Group) -> lists:reverse(Group) end).
 
--file("src/gleam/yielder.gleam", 1303).
-?DOC(
-    " This function acts similar to fold, but does not take an initial state.\n"
-    " Instead, it starts from the first yielded element\n"
-    " and combines it with each subsequent element in turn using the given function.\n"
-    " The function is called as `f(accumulator, current_element)`.\n"
-    "\n"
-    " Returns `Ok` to indicate a successful run, and `Error` if called on an empty yielder.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([])\n"
-    " |> reduce(fn(acc, x) { acc + x })\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4, 5])\n"
-    " |> reduce(fn(acc, x) { acc + x })\n"
-    " // -> Ok(15)\n"
-    " ```\n"
-).
--spec reduce(yielder(GAR), fun((GAR, GAR) -> GAR)) -> {ok, GAR} | {error, nil}.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1303).
+-spec reduce(yielder(GGL), fun((GGL, GGL) -> GGL)) -> {ok, GGL} | {error, nil}.
 reduce(Yielder, F) ->
     case (erlang:element(2, Yielder))() of
         stop ->
@@ -1326,84 +695,24 @@ reduce(Yielder, F) ->
             {ok, _pipe}
     end.
 
--file("src/gleam/yielder.gleam", 1330).
-?DOC(
-    " Returns the last element in the given yielder.\n"
-    "\n"
-    " Returns `Error(Nil)` if the yielder is empty.\n"
-    "\n"
-    " This function runs in linear time.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> last\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " range(1, 10) |> last\n"
-    " // -> Ok(10)\n"
-    " ```\n"
-).
--spec last(yielder(GAV)) -> {ok, GAV} | {error, nil}.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1330).
+-spec last(yielder(GGP)) -> {ok, GGP} | {error, nil}.
 last(Yielder) ->
     _pipe = Yielder,
     reduce(_pipe, fun(_, Elem) -> Elem end).
 
--file("src/gleam/yielder.gleam", 1344).
-?DOC(
-    " Creates an yielder that yields no elements.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> to_list\n"
-    " // -> []\n"
-    " ```\n"
-).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1344).
 -spec empty() -> yielder(any()).
 empty() ->
     {yielder, fun stop/0}.
 
--file("src/gleam/yielder.gleam", 1357).
-?DOC(
-    " Creates an yielder that yields exactly one element provided by calling the given function.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " once(fn() { 1 }) |> to_list\n"
-    " // -> [1]\n"
-    " ```\n"
-).
--spec once(fun(() -> GBB)) -> yielder(GBB).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1357).
+-spec once(fun(() -> GGV)) -> yielder(GGV).
 once(F) ->
     _pipe = fun() -> {continue, F(), fun stop/0} end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 657).
-?DOC(
-    " Creates an yielder of ints, starting at a given start int and stepping by\n"
-    " one to a given end int.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " range(from: 1, to: 5) |> to_list\n"
-    " // -> [1, 2, 3, 4, 5]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " range(from: 1, to: -2) |> to_list\n"
-    " // -> [1, 0, -1, -2]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " range(from: 0, to: 0) |> to_list\n"
-    " // -> [0]\n"
-    " ```\n"
-).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 657).
 -spec range(integer(), integer()) -> yielder(integer()).
 range(Start, Stop) ->
     case gleam@int:compare(Start, Stop) of
@@ -1429,23 +738,13 @@ range(Start, Stop) ->
                     end end)
     end.
 
--file("src/gleam/yielder.gleam", 1371).
-?DOC(
-    " Creates an yielder that yields the given element exactly once.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " single(1) |> to_list\n"
-    " // -> [1]\n"
-    " ```\n"
-).
--spec single(GBD) -> yielder(GBD).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1371).
+-spec single(GGX) -> yielder(GGX).
 single(Elem) ->
     once(fun() -> Elem end).
 
--file("src/gleam/yielder.gleam", 1402).
--spec interleave_loop(fun(() -> action(GBJ)), fun(() -> action(GBJ))) -> action(GBJ).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1402).
+-spec interleave_loop(fun(() -> action(GHD)), fun(() -> action(GHD))) -> action(GHD).
 interleave_loop(Current, Next) ->
     case Current() of
         stop ->
@@ -1455,40 +754,20 @@ interleave_loop(Current, Next) ->
             {continue, E, fun() -> interleave_loop(Next, Next_other) end}
     end.
 
--file("src/gleam/yielder.gleam", 1394).
-?DOC(
-    " Creates an yielder that alternates between the two given yielders\n"
-    " until both have run out.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> interleave(from_list([11, 12, 13, 14]))\n"
-    " |> to_list\n"
-    " // -> [1, 11, 2, 12, 3, 13, 4, 14]\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> interleave(from_list([100]))\n"
-    " |> to_list\n"
-    " // -> [1, 100, 2, 3, 4]\n"
-    " ```\n"
-).
--spec interleave(yielder(GBF), yielder(GBF)) -> yielder(GBF).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1394).
+-spec interleave(yielder(GGZ), yielder(GGZ)) -> yielder(GGZ).
 interleave(Left, Right) ->
     _pipe = fun() ->
         interleave_loop(erlang:element(2, Left), erlang:element(2, Right))
     end,
     {yielder, _pipe}.
 
--file("src/gleam/yielder.gleam", 1446).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1446).
 -spec fold_until_loop(
-    fun(() -> action(GBR)),
-    fun((GBT, GBR) -> gleam@list:continue_or_stop(GBT)),
-    GBT
-) -> GBT.
+    fun(() -> action(GHL)),
+    fun((GHN, GHL) -> gleam@list:continue_or_stop(GHN)),
+    GHN
+) -> GHN.
 fold_until_loop(Continuation, F, Accumulator) ->
     case Continuation() of
         stop ->
@@ -1504,47 +783,22 @@ fold_until_loop(Continuation, F, Accumulator) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 1437).
-?DOC(
-    " Like `fold`, `fold_until` reduces an yielder of elements into a single value by calling a given\n"
-    " function on each element in turn, but uses `list.ContinueOrStop` to determine\n"
-    " whether or not to keep iterating.\n"
-    "\n"
-    " If called on an yielder of infinite length then this function will only ever\n"
-    " return if the function returns `list.Stop`.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " import gleam/list\n"
-    "\n"
-    " let f = fn(acc, e) {\n"
-    "   case e {\n"
-    "     _ if e < 4 -> list.Continue(e + acc)\n"
-    "     _ -> list.Stop(acc)\n"
-    "   }\n"
-    " }\n"
-    "\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> fold_until(from: 0, with: f)\n"
-    " // -> 6\n"
-    " ```\n"
-).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1437).
 -spec fold_until(
-    yielder(GBN),
-    GBP,
-    fun((GBP, GBN) -> gleam@list:continue_or_stop(GBP))
-) -> GBP.
+    yielder(GHH),
+    GHJ,
+    fun((GHJ, GHH) -> gleam@list:continue_or_stop(GHJ))
+) -> GHJ.
 fold_until(Yielder, Initial, F) ->
     _pipe = erlang:element(2, Yielder),
     fold_until_loop(_pipe, F, Initial).
 
--file("src/gleam/yielder.gleam", 1489).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1489).
 -spec try_fold_loop(
-    fun(() -> action(GCD)),
-    fun((GCF, GCD) -> {ok, GCF} | {error, GCG}),
-    GCF
-) -> {ok, GCF} | {error, GCG}.
+    fun(() -> action(GHX)),
+    fun((GHZ, GHX) -> {ok, GHZ} | {error, GIA}),
+    GHZ
+) -> {ok, GHZ} | {error, GIA}.
 try_fold_loop(Continuation, F, Accumulator) ->
     case Continuation() of
         stop ->
@@ -1560,52 +814,16 @@ try_fold_loop(Continuation, F, Accumulator) ->
             end
     end.
 
--file("src/gleam/yielder.gleam", 1480).
-?DOC(
-    " A variant of fold that might fail.\n"
-    "\n"
-    " The folding function should return `Result(accumulator, error)`.\n"
-    " If the returned value is `Ok(accumulator)` try_fold will try the next value in the yielder.\n"
-    " If the returned value is `Error(error)` try_fold will stop and return that error.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4])\n"
-    " |> try_fold(0, fn(acc, i) {\n"
-    "   case i < 3 {\n"
-    "     True -> Ok(acc + i)\n"
-    "     False -> Error(Nil)\n"
-    "   }\n"
-    " })\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-).
--spec try_fold(yielder(GBV), GBX, fun((GBX, GBV) -> {ok, GBX} | {error, GBY})) -> {ok,
-        GBX} |
-    {error, GBY}.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1480).
+-spec try_fold(yielder(GHP), GHR, fun((GHR, GHP) -> {ok, GHR} | {error, GHS})) -> {ok,
+        GHR} |
+    {error, GHS}.
 try_fold(Yielder, Initial, F) ->
     _pipe = erlang:element(2, Yielder),
     try_fold_loop(_pipe, F, Initial).
 
--file("src/gleam/yielder.gleam", 1519).
-?DOC(
-    " Returns the first element yielded by the given yielder, if it exists,\n"
-    " or `Error(Nil)` otherwise.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3]) |> first\n"
-    " // -> Ok(1)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> first\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-).
--spec first(yielder(GCL)) -> {ok, GCL} | {error, nil}.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1519).
+-spec first(yielder(GIF)) -> {ok, GIF} | {error, nil}.
 first(Yielder) ->
     case (erlang:element(2, Yielder))() of
         stop ->
@@ -1615,38 +833,14 @@ first(Yielder) ->
             {ok, E}
     end.
 
--file("src/gleam/yielder.gleam", 1549).
-?DOC(
-    " Returns nth element yielded by the given yielder, where `0` means the first element.\n"
-    "\n"
-    " If there are not enough elements in the yielder, `Error(Nil)` is returned.\n"
-    "\n"
-    " For any `index` less than `0` this function behaves as if it was set to `0`.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4]) |> at(2)\n"
-    " // -> Ok(3)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4]) |> at(4)\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> at(0)\n"
-    " // -> Error(Nil)\n"
-    " ```\n"
-).
--spec at(yielder(GCP), integer()) -> {ok, GCP} | {error, nil}.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1549).
+-spec at(yielder(GIJ), integer()) -> {ok, GIJ} | {error, nil}.
 at(Yielder, Index) ->
     _pipe = Yielder,
     _pipe@1 = drop(_pipe, Index),
     first(_pipe@1).
 
--file("src/gleam/yielder.gleam", 1577).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1577).
 -spec length_loop(fun(() -> action(any())), integer()) -> integer().
 length_loop(Continuation, Length) ->
     case Continuation() of
@@ -1657,99 +851,28 @@ length_loop(Continuation, Length) ->
             length_loop(Next, Length + 1)
     end.
 
--file("src/gleam/yielder.gleam", 1572).
-?DOC(
-    " Counts the number of elements in the given yielder.\n"
-    "\n"
-    " This function has to traverse the entire yielder to count its elements,\n"
-    " so it runs in linear time.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> length\n"
-    " // -> 0\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([1, 2, 3, 4]) |> length\n"
-    " // -> 4\n"
-    " ```\n"
-).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1572).
 -spec length(yielder(any())) -> integer().
 length(Yielder) ->
     _pipe = erlang:element(2, Yielder),
     length_loop(_pipe, 0).
 
--file("src/gleam/yielder.gleam", 1601).
-?DOC(
-    " Traverse an yielder, calling a function on each element.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " empty() |> each(io.println)\n"
-    " // -> Nil\n"
-    " ```\n"
-    "\n"
-    " ```gleam\n"
-    " from_list([\"Tom\", \"Malory\", \"Louis\"]) |> each(io.println)\n"
-    " // -> Nil\n"
-    " // Tom\n"
-    " // Malory\n"
-    " // Louis\n"
-    " ```\n"
-).
--spec each(yielder(GCX), fun((GCX) -> any())) -> nil.
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1601).
+-spec each(yielder(GIR), fun((GIR) -> any())) -> nil.
 each(Yielder, F) ->
     _pipe = Yielder,
     _pipe@1 = map(_pipe, F),
     run(_pipe@1).
 
--file("src/gleam/yielder.gleam", 1629).
-?DOC(
-    " Add a new element to the start of an yielder.\n"
-    "\n"
-    " This function is for use with `use` expressions, to replicate the behaviour\n"
-    " of the `yield` keyword found in other languages.\n"
-    "\n"
-    " If you only need to prepend an element and don't require the `use` syntax,\n"
-    " use `prepend`.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " let yielder = {\n"
-    "   use <- yield(1)\n"
-    "   use <- yield(2)\n"
-    "   use <- yield(3)\n"
-    "   empty()\n"
-    " }\n"
-    "\n"
-    " yielder |> to_list\n"
-    " // -> [1, 2, 3]\n"
-    " ```\n"
-).
--spec yield(GDA, fun(() -> yielder(GDA))) -> yielder(GDA).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1629).
+-spec yield(GIU, fun(() -> yielder(GIU))) -> yielder(GIU).
 yield(Element, Next) ->
     {yielder,
         fun() ->
             {continue, Element, fun() -> (erlang:element(2, Next()))() end}
         end}.
 
--file("src/gleam/yielder.gleam", 1644).
-?DOC(
-    " Add a new element to the start of an yielder.\n"
-    "\n"
-    " ## Examples\n"
-    "\n"
-    " ```gleam\n"
-    " let yielder = from_list([1, 2, 3]) |> prepend(0)\n"
-    "\n"
-    " yielder.to_list\n"
-    " // -> [0, 1, 2, 3]\n"
-    " ```\n"
-).
--spec prepend(yielder(GDD), GDD) -> yielder(GDD).
+-file("/Users/louis/src/gleam/yielder/src/gleam/yielder.gleam", 1644).
+-spec prepend(yielder(GIX), GIX) -> yielder(GIX).
 prepend(Yielder, Element) ->
     yield(Element, fun() -> Yielder end).

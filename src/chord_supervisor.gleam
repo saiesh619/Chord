@@ -69,7 +69,6 @@ pub fn update(state: State, msg: Msg) -> actor.Next(State, Msg) {
     AllJoined -> {
       io.println("Supervisor: starting lookups on all nodes")
 
-      // ✅ Flip stats into user phase right before lookups
       actor.send(state.stats, chord_stats.StartUserPhase)
 
       list.each(state.nodes, fn(n) {

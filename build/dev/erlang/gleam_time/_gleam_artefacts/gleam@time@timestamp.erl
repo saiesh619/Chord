@@ -1,5 +1,5 @@
 -module(gleam@time@timestamp).
--compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch, inline]).
+-compile([no_auto_import, nowarn_unused_vars, nowarn_unused_function, nowarn_nomatch]).
 -define(FILEPATH, "src/gleam/time/timestamp.gleam").
 -export([compare/2, system_time/0, difference/2, add/2, to_calendar/2, to_rfc3339/2, from_unix_seconds/1, from_unix_seconds_and_nanoseconds/2, to_unix_seconds/1, to_unix_seconds_and_nanoseconds/1, from_calendar/3, parse_rfc3339/1]).
 -export_type([timestamp/0]).
