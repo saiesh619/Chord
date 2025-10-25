@@ -1,5 +1,5 @@
 
-<<<<<<< HEAD
+
 # Project 3 – Chord Protocol Simulation
 
 ## Team Members
